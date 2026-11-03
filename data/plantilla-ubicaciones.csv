@@ -1,0 +1,4 @@
+nombre,tipo,detalle,latitud,longitud,direccion,localidad,partido,telefono,notas
+EJEMPLO Hospital de Tandil,hospital_media,,-37.3287,-59.1369,Av. Ejemplo 100,Tandil,Tandil,,Borrar esta fila. Es solo una muestra.
+EJEMPLO DEA plaza,dea,,-38.0055,-57.5426,Plaza ejemplo,Mar del Plata,General Pueyrredón,,
+EJEMPLO Cuartel,otra,Bomberos,-38.7196,-62.2724,,Bahía Blanca,Bahía Blanca,,
