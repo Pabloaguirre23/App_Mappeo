@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CitySearch } from '../components/CitySearch.tsx'
 import { Filters } from '../components/Filters.tsx'
+import { MapMenu } from '../components/MapMenu.tsx'
 import { LocationForm } from '../components/LocationForm.tsx'
 import { LocationSheet } from '../components/LocationSheet.tsx'
 import { MapView, type MapFocus } from '../components/MapView.tsx'
@@ -60,6 +61,7 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
   const [actionError, setActionError] = useState<string | null>(null)
   const [gpsMessage, setGpsMessage] = useState<string | null>(null)
   const [locating, setLocating] = useState(false)
+  const [darkMap, setDarkMap] = useState(() => window.localStorage.getItem('map-dark') === '1')
 
   const requestRef = useRef(0)
   const pendingRef = useRef<LocationDraft | null>(null)
@@ -332,6 +334,7 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
           locations={locations}
           selectedId={selected?.id ?? null}
           placing={mode !== 'browse'}
+          dark={darkMap}
           draft={draft}
           focus={focus}
           onSelect={onSelect}
@@ -341,11 +344,22 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
       </div>
 
       <div className="pointer-events-none absolute inset-x-0 top-0 z-[450] flex flex-col gap-2 p-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:pr-[24px]">
-        <div className={`pointer-events-auto flex items-center gap-2 ${showForm || selected ? 'md:pr-[392px]' : ''}`}>
+        <div className={`pointer-events-auto relative z-10 flex items-center gap-2 ${showForm || selected ? 'md:pr-[392px]' : ''}`}>
           <CitySearch
             onSelect={(locality) => {
               setFocus({ lat: locality.lat, lng: locality.lng, zoom: 13, token: Date.now() })
             }}
+          />
+          <MapMenu
+            dark={darkMap}
+            onToggleDark={() => {
+              setDarkMap((current) => {
+                const next = !current
+                window.localStorage.setItem('map-dark', next ? '1' : '0')
+                return next
+              })
+            }}
+            onExit={onExit}
           />
           <button
             type="button"
@@ -356,9 +370,6 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
             onClick={locate}
           >
             <LocateIcon />
-          </button>
-          <button type="button" className="btn btn-ghost h-11 shrink-0 px-3 shadow-sm" onClick={onExit}>
-            Salir
           </button>
         </div>
         <div className={`pointer-events-auto ${showForm || selected ? 'md:pr-[392px]' : ''}`}>

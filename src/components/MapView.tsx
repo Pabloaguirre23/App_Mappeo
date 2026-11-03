@@ -24,6 +24,7 @@ type MapViewProps = {
   locations: Location[]
   selectedId: string | null
   placing: boolean
+  dark: boolean
   draft: { lat: number; lng: number } | null
   focus: MapFocus | null
   onSelect: (location: Location) => void
@@ -40,6 +41,7 @@ export function MapView({
   locations,
   selectedId,
   placing,
+  dark,
   draft,
   focus,
   onSelect,
@@ -58,7 +60,7 @@ export function MapView({
       ]}
       maxBoundsViscosity={0.6}
       zoomControl={false}
-      className="h-full w-full"
+      className={dark ? 'map-dark h-full w-full' : 'h-full w-full'}
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -66,6 +68,7 @@ export function MapView({
         subdomains="abc"
         maxZoom={19}
       />
+      <MapTheme dark={dark} />
       <ZoomControl position="bottomleft" />
       <MapEvents placing={placing} onPick={onPick} onBounds={onBounds} />
       <FlyTo focus={focus} />
@@ -85,6 +88,14 @@ export function MapView({
       ) : null}
     </MapContainer>
   )
+}
+
+function MapTheme({ dark }: { dark: boolean }) {
+  const map = useMap()
+  useEffect(() => {
+    map.getContainer().classList.toggle('map-dark', dark)
+  }, [map, dark])
+  return null
 }
 
 function MapEvents({

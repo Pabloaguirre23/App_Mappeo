@@ -112,6 +112,18 @@ button:disabled {
   z-index: 0;
 }
 
+.map-dark.leaflet-container {
+  background: #1c2430;
+}
+
+.map-dark .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(1.12) contrast(1.05) saturate(0.45);
+}
+
+.map-dark .pin.is-selected {
+  box-shadow: 0 0 0 3px #f6f3ec;
+}
+
 .leaflet-container img,
 .leaflet-container .leaflet-tile {
   max-width: none !important;
