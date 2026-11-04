@@ -29,6 +29,7 @@ type MapViewProps = {
   focus: MapFocus | null
   onSelect: (location: Location) => void
   onPick: (lat: number, lng: number) => void
+  onDismiss: () => void
   onBounds: (bounds: Bounds) => void
 }
 
@@ -46,6 +47,7 @@ export function MapView({
   focus,
   onSelect,
   onPick,
+  onDismiss,
   onBounds,
 }: MapViewProps) {
   return (
@@ -70,7 +72,7 @@ export function MapView({
       />
       <MapTheme dark={dark} />
       <ZoomControl position="bottomleft" />
-      <MapEvents placing={placing} onPick={onPick} onBounds={onBounds} />
+      <MapEvents placing={placing} onPick={onPick} onDismiss={onDismiss} onBounds={onBounds} />
       <FlyTo focus={focus} />
       <ClusteredMarkers
         locations={locations}
@@ -101,24 +103,33 @@ function MapTheme({ dark }: { dark: boolean }) {
 function MapEvents({
   placing,
   onPick,
+  onDismiss,
   onBounds,
 }: {
   placing: boolean
   onPick: (lat: number, lng: number) => void
+  onDismiss: () => void
   onBounds: (bounds: Bounds) => void
 }) {
   const map = useMap()
   const onPickRef = useRef(onPick)
+  const onDismissRef = useRef(onDismiss)
   const onBoundsRef = useRef(onBounds)
   useEffect(() => {
     onPickRef.current = onPick
+    onDismissRef.current = onDismiss
     onBoundsRef.current = onBounds
   })
 
   useMapEvents({
     click(event) {
-      if (!placing) return
-      onPickRef.current(event.latlng.lat, event.latlng.lng)
+      if (placing) {
+        onPickRef.current(event.latlng.lat, event.latlng.lng)
+        return
+      }
+      const target = event.originalEvent.target
+      if (target instanceof Element && target.closest('.leaflet-marker-icon, .leaflet-marker-shadow')) return
+      onDismissRef.current()
     },
     moveend() {
       publishBounds(map, onBoundsRef.current)
@@ -186,6 +197,7 @@ function ClusteredMarkers({
         icon: pinIcon(location.kind, location.id === selectedId),
         interactive: !placing,
         keyboard: !placing,
+        bubblingMouseEvents: false,
         title: location.name,
       })
       point.on('click', () => onSelect(location))

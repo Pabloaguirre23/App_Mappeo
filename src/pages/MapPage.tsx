@@ -339,6 +339,7 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
           focus={focus}
           onSelect={onSelect}
           onPick={onPick}
+          onDismiss={() => setSelected(null)}
           onBounds={onBounds}
         />
       </div>
@@ -444,7 +445,7 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
       ) : null}
 
       {mode === 'browse' && selected ? (
-        <Panel title={selected.name} onClose={() => setSelected(null)}>
+        <Panel title={selected.name} swipeToClose onClose={() => setSelected(null)}>
           <LocationSheet
             location={selected}
             canModify={profile.role === 'admin' || selected.createdBy === profile.id}
