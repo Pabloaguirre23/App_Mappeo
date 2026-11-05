@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { KindGlyph } from './KindGlyph.tsx'
 import { KIND_LIST, KIND_META } from '../lib/kinds.ts'
 import { formatDistance } from '../lib/geo.ts'
@@ -6,7 +6,6 @@ import type { LocationDraft, NearbyHit } from '../lib/types.ts'
 
 type LocationFormProps = {
   initial: LocationDraft
-  placeLabel: string | null
   placeError: string | null
   placeLoading: boolean
   saving: boolean
@@ -18,6 +17,8 @@ type LocationFormProps = {
   onUseMyLocation: () => void
   onCancel: () => void
   dark: boolean
+  suggestedLocality: string | null
+  partido: string | null
 }
 
 type FieldErrors = {
@@ -27,7 +28,6 @@ type FieldErrors = {
 
 export function LocationForm({
   initial,
-  placeLabel,
   placeError,
   placeLoading,
   saving,
@@ -39,9 +39,19 @@ export function LocationForm({
   onUseMyLocation,
   onCancel,
   dark,
+  suggestedLocality,
+  partido,
 }: LocationFormProps) {
   const [values, setValues] = useState(initial)
   const [errors, setErrors] = useState<FieldErrors>({})
+  const localityEdited = useRef(Boolean(initial.locality))
+
+  useEffect(() => {
+    if (localityEdited.current || !suggestedLocality) return
+    setValues((current) =>
+      current.locality === suggestedLocality ? current : { ...current, locality: suggestedLocality },
+    )
+  }, [suggestedLocality])
 
   function update<K extends keyof LocationDraft>(key: K, value: LocationDraft[K]) {
     setValues((current) => ({ ...current, [key]: value }))
@@ -62,7 +72,6 @@ export function LocationForm({
     <form onSubmit={handleSubmit} className="flex flex-col gap-3 pb-2">
       <p className="text-sm text-muted">Tocá el mapa si querés mover el punto.</p>
       {placeLoading ? <p className="text-sm">Verificando la zona…</p> : null}
-      {placeLabel ? <p className="text-sm font-bold">{placeLabel}</p> : null}
       {placeError ? (
         <p role="alert" className="text-sm text-dea">
           {placeError}
@@ -139,6 +148,22 @@ export function LocationForm({
         />
       </label>
       <label className="flex flex-col gap-1 text-sm font-bold">
+        Localidad
+        <input
+          className="field font-normal"
+          value={values.locality}
+          maxLength={120}
+          autoComplete="address-level2"
+          onChange={(event) => {
+            localityEdited.current = true
+            update('locality', event.target.value)
+          }}
+        />
+      </label>
+      {partido && partido !== values.locality.trim() ? (
+        <p className="text-sm text-muted">Partido de {partido}</p>
+      ) : null}
+      <label className="flex flex-col gap-1 text-sm font-bold">
         Teléfono
         <input
           className="field font-normal"
@@ -150,7 +175,7 @@ export function LocationForm({
         />
       </label>
       <label className="flex flex-col gap-1 text-sm font-bold">
-        Notas
+        Nota
         <textarea
           className="field min-h-24 py-2 font-normal"
           value={values.notes}

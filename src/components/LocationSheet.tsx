@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { KindGlyph } from './KindGlyph.tsx'
 import { KIND_META, kindBadge } from '../lib/kinds.ts'
 import type { Location } from '../lib/types.ts'
@@ -10,7 +10,6 @@ type LocationSheetProps = {
   deleting: boolean
   dark: boolean
   error: string | null
-  onClose: () => void
   onEdit: () => void
   onDelete: () => void
 }
@@ -22,7 +21,6 @@ export function LocationSheet({
   deleting,
   dark,
   error,
-  onClose,
   onEdit,
   onDelete,
 }: LocationSheetProps) {
@@ -34,7 +32,6 @@ export function LocationSheet({
   }
 
   const badge = kindBadge(location)
-  const place = placeLine(location)
   const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${location.lat},${location.lng}`
 
   return (
@@ -52,14 +49,19 @@ export function LocationSheet({
         </span>
         {badge}
       </p>
-      {location.address ? <p>{location.address}</p> : null}
-      {place ? <p className="text-sm text-muted">{place}</p> : null}
-      {location.phone ? (
-        <a className="font-bold text-ink underline" href={`tel:${location.phone}`}>
-          {location.phone}
-        </a>
+      {location.address ? <InfoField label="Dirección">{location.address}</InfoField> : null}
+      {location.locality ? <InfoField label="Localidad">{location.locality}</InfoField> : null}
+      {location.partido && location.partido !== location.locality ? (
+        <p className="text-sm text-muted">Partido de {location.partido}</p>
       ) : null}
-      {location.notes ? <p className="whitespace-pre-wrap text-sm">{location.notes}</p> : null}
+      {location.phone ? (
+        <InfoField label="Teléfono">
+          <a className="font-bold text-ink underline" href={`tel:${location.phone}`}>
+            {location.phone}
+          </a>
+        </InfoField>
+      ) : null}
+      {location.notes ? <InfoField label="Nota">{location.notes}</InfoField> : null}
       <p className="text-sm text-muted">
         {location.source === 'import'
           ? 'Dato importado'
@@ -97,17 +99,16 @@ export function LocationSheet({
             {error}
           </p>
         ) : null}
-        <button type="button" className="btn btn-ghost w-full md:hidden" onClick={onClose}>
-          Cerrar
-        </button>
       </div>
     </div>
   )
 }
 
-function placeLine(location: Location): string | null {
-  if (!location.locality && !location.partido) return null
-  if (!location.partido || location.locality === location.partido) return location.locality ?? location.partido
-  if (!location.locality) return `Partido de ${location.partido}`
-  return `${location.locality} · partido de ${location.partido}`
+function InfoField({ label, children }: { label: string; children: string | ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <p className="text-xs font-bold text-muted">{label}</p>
+      <div className="rounded-xl border border-line bg-surface px-3 py-2 whitespace-pre-wrap">{children}</div>
+    </div>
+  )
 }

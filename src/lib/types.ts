@@ -26,6 +26,7 @@ export type LocationDraft = {
   kind: Kind
   otherLabel: string
   address: string
+  locality: string
   phone: string
   notes: string
 }
@@ -33,7 +34,6 @@ export type LocationDraft = {
 export type NewLocation = LocationDraft & {
   lat: number
   lng: number
-  locality: string | null
   partido: string | null
 }
 
@@ -55,6 +55,7 @@ export const EMPTY_DRAFT: LocationDraft = {
   kind: 'dea',
   otherLabel: '',
   address: '',
+  locality: '',
   phone: '',
   notes: '',
 }
@@ -64,6 +65,7 @@ export function draftFromLocation(location: {
   kind: Kind
   otherLabel: string | null
   address: string | null
+  locality: string | null
   phone: string | null
   notes: string | null
 }): LocationDraft {
@@ -72,6 +74,7 @@ export function draftFromLocation(location: {
     kind: location.kind,
     otherLabel: location.otherLabel ?? '',
     address: location.address ?? '',
+    locality: location.locality ?? '',
     phone: location.phone ?? '',
     notes: location.notes ?? '',
   }

@@ -270,7 +270,6 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
         ...values,
         lat: draft.lat,
         lng: draft.lng,
-        locality: currentPlace.result.locality,
         partido: currentPlace.result.partido,
       }
       const saved = editing ? await repo.update(editing.id, input) : await repo.insert(input, profile.id)
@@ -311,7 +310,8 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
   }
 
   const placeResult = place?.status === 'done' ? place.result : null
-  const placeLabel = placeResult?.ok ? formatPlace(placeResult.locality, placeResult.partido) : null
+  const suggestedLocality = placeResult?.ok ? placeResult.locality : null
+  const placePartido = placeResult?.ok ? placeResult.partido : null
   const placeError = placeResult && !placeResult.ok ? placeResult.message : null
   const showForm = mode !== 'browse' && draft !== null
   const formInitial = editing ? draftFromLocation(editing) : EMPTY_DRAFT
@@ -423,7 +423,6 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
           <LocationForm
             key={editing?.id ?? 'new'}
             initial={formInitial}
-            placeLabel={placeLabel}
             placeError={placeError}
             placeLoading={place?.status === 'loading'}
             saving={saving}
@@ -441,6 +440,8 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
             onUseMyLocation={locate}
             onCancel={cancelForm}
             dark={darkMap}
+            suggestedLocality={suggestedLocality}
+            partido={placePartido}
           />
         </Panel>
       ) : null}
@@ -454,7 +455,6 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
             deleting={deleting}
             dark={darkMap}
             error={actionError}
-            onClose={() => setSelected(null)}
             onEdit={startEdit}
             onDelete={() => void removeSelected()}
           />
@@ -466,11 +466,6 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
 
 function sameBounds(a: Bounds, b: Bounds): boolean {
   return a.south === b.south && a.north === b.north && a.west === b.west && a.east === b.east
-}
-
-function formatPlace(locality: string | null, partido: string | null): string | null {
-  if (locality && partido && locality !== partido) return `${locality} · partido de ${partido}`
-  return locality ?? (partido ? `Partido de ${partido}` : null)
 }
 
 function LocateIcon() {
