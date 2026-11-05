@@ -5,14 +5,15 @@ type FiltersProps = {
   active: ReadonlySet<Kind>
   dark: boolean
   onToggle: (kind: Kind) => void
+  label?: string
 }
 
-export function Filters({ active, dark, onToggle }: FiltersProps) {
+export function Filters({ active, dark, onToggle, label = 'Capas del mapa' }: FiltersProps) {
   return (
     <div
       className="flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       role="group"
-      aria-label="Capas del mapa"
+      aria-label={label}
     >
       {KIND_LIST.map((kind) => {
         const meta = KIND_META[kind]

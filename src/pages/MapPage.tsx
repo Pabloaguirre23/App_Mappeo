@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CitySearch } from '../components/CitySearch.tsx'
 import { Filters } from '../components/Filters.tsx'
 import { MapMenu } from '../components/MapMenu.tsx'
+import { MyPins } from '../components/MyPins.tsx'
 import { LocationForm } from '../components/LocationForm.tsx'
 import { LocationSheet } from '../components/LocationSheet.tsx'
 import { MapView, type MapFocus } from '../components/MapView.tsx'
@@ -62,8 +63,13 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
   const [gpsMessage, setGpsMessage] = useState<string | null>(null)
   const [locating, setLocating] = useState(false)
   const [darkMap, setDarkMap] = useState(() => window.localStorage.getItem('map-dark') === '1')
+  const [mineOpen, setMineOpen] = useState(false)
+  const [mineRows, setMineRows] = useState<Location[]>([])
+  const [mineLoading, setMineLoading] = useState(false)
+  const [mineError, setMineError] = useState<string | null>(null)
 
   const requestRef = useRef(0)
+  const mineRequestRef = useRef(0)
   const pendingRef = useRef<LocationDraft | null>(null)
   const modeRef = useRef(mode)
   const editingRef = useRef(editing)
@@ -151,6 +157,10 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
         const tag = target.tagName
         if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
       }
+      if (mineOpen) {
+        setMineOpen(false)
+        return
+      }
       if (mode !== 'browse') {
         cancelForm()
         return
@@ -159,7 +169,7 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [mode, cancelForm])
+  }, [mode, cancelForm, mineOpen])
 
   const onBounds = useCallback((next: Bounds) => {
     setBounds((current) => (current && sameBounds(current, next) ? current : next))
@@ -199,7 +209,37 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
       return next
     })
     setSelected(location)
-    setFocus({ lat: location.lat, lng: location.lng, zoom: 16, token: Date.now() })
+    setFocus({ lat: location.lat, lng: location.lng, zoom: 19, token: Date.now(), lift: true })
+  }
+
+  function openMine() {
+    setMode('browse')
+    setDraft(null)
+    setPlace(null)
+    setNearby(null)
+    setFormError(null)
+    setEditing(null)
+    pendingRef.current = null
+    setSelected(null)
+    setMineOpen(true)
+    setMineLoading(true)
+    setMineError(null)
+    const requestId = ++mineRequestRef.current
+    void repo
+      .listMine(profile.id)
+      .then((rows) => {
+        if (requestId !== mineRequestRef.current) return
+        setMineRows(rows)
+        setMineError(null)
+      })
+      .catch((error: unknown) => {
+        if (requestId !== mineRequestRef.current) return
+        setMineRows([])
+        setMineError(error instanceof Error ? error.message : 'No se pudieron cargar tus pines.')
+      })
+      .finally(() => {
+        if (requestId === mineRequestRef.current) setMineLoading(false)
+      })
   }
 
   function startCreate() {
@@ -379,6 +419,7 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
                 return next
               })
             }}
+            onOpenMine={openMine}
             onExit={onExit}
           />
           <CitySearch
@@ -468,6 +509,25 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
             dark={darkMap}
             suggestedLocality={suggestedLocality}
             partido={placePartido}
+          />
+        </Panel>
+      ) : null}
+
+      {mineOpen ? (
+        <Panel
+          title="Mis pines"
+          subtitle={mineLoading ? 'Cargando…' : mineRows.length === 1 ? '1 pin' : `${mineRows.length} pines`}
+          onClose={() => setMineOpen(false)}
+        >
+          <MyPins
+            rows={mineRows}
+            loading={mineLoading}
+            error={mineError}
+            dark={darkMap}
+            onSelect={(location) => {
+              setMineOpen(false)
+              openSearchedPin(location)
+            }}
           />
         </Panel>
       ) : null}

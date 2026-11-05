@@ -3,10 +3,11 @@ import { useEffect, useRef, useState } from 'react'
 type MapMenuProps = {
   dark: boolean
   onToggleDark: () => void
+  onOpenMine: () => void
   onExit: () => void
 }
 
-export function MapMenu({ dark, onToggleDark, onExit }: MapMenuProps) {
+export function MapMenu({ dark, onToggleDark, onOpenMine, onExit }: MapMenuProps) {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
 
@@ -63,6 +64,17 @@ export function MapMenu({ dark, onToggleDark, onExit }: MapMenuProps) {
                 className={`absolute top-0.5 size-5 rounded-full ${dark ? 'left-5 bg-paper' : 'left-0.5 bg-surface'}`}
               />
             </span>
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className="flex min-h-11 w-full items-center rounded-xl px-3 text-left text-sm font-bold hover:bg-paper"
+            onClick={() => {
+              setOpen(false)
+              onOpenMine()
+            }}
+          >
+            Mis pines
           </button>
           <button
             type="button"

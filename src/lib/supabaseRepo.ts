@@ -52,6 +52,17 @@ export function createSupabaseRepo(client: SupabaseClient): LocationRepo {
       return { rows, truncated: rows.length >= VIEWPORT_LIMIT }
     },
 
+    async listMine(userId) {
+      const { data, error } = await client
+        .from('locations')
+        .select(COLUMNS)
+        .eq('created_by', userId)
+        .order('name')
+        .limit(500)
+      if (error) throw new Error(readableError(error, 'No se pudieron cargar tus pines.'))
+      return ((data ?? []) as Row[]).map((row) => mapRow(row))
+    },
+
     async searchByName(query, signal) {
       const text = query.trim()
       if (text.length < 2) return []

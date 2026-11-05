@@ -18,6 +18,7 @@ export type MapFocus = {
   lng: number
   zoom: number
   token: number
+  lift?: boolean
 }
 
 type MapViewProps = {
@@ -55,7 +56,7 @@ export function MapView({
       bounds={PROVINCE_BOUNDS}
       boundsOptions={{ padding: [20, 20] }}
       minZoom={5}
-      maxZoom={18}
+      maxZoom={19}
       maxBounds={[
         [-42.4, -65.5],
         [-32.2, -55.4],
@@ -164,9 +165,15 @@ function FlyTo({ focus }: { focus: MapFocus | null }) {
   const map = useMap()
   useEffect(() => {
     if (!focus) return
-    map.flyTo([focus.lat, focus.lng], focus.zoom, { duration: 0.9 })
+    const center = focus.lift ? liftedCenter(map, focus.lat, focus.lng, focus.zoom) : [focus.lat, focus.lng] as [number, number]
+    map.flyTo(center, focus.zoom, { duration: 0.9 })
   }, [focus, map])
   return null
+}
+
+function liftedCenter(map: LeafletMap, lat: number, lng: number, zoom: number) {
+  const shift = Math.round(map.getSize().y * 0.18)
+  return map.unproject(map.project([lat, lng], zoom).add([0, shift]), zoom)
 }
 
 function ClusteredMarkers({
@@ -185,6 +192,7 @@ function ClusteredMarkers({
     const group = markerClusterGroup({
       showCoverageOnHover: false,
       maxClusterRadius: 46,
+      disableClusteringAtZoom: 17,
       spiderfyOnMaxZoom: true,
       zoomToBoundsOnClick: !placing,
       iconCreateFunction(cluster) {
@@ -193,11 +201,13 @@ function ClusteredMarkers({
     })
 
     for (const location of locations) {
+      const selected = location.id === selectedId
       const point = marker([location.lat, location.lng], {
-        icon: pinIcon(location.kind, location.id === selectedId),
+        icon: pinIcon(location.kind, selected),
         interactive: !placing,
         keyboard: !placing,
         bubblingMouseEvents: false,
+        zIndexOffset: selected ? 1000 : 0,
         title: location.name,
       })
       point.on('click', () => onSelect(location))
