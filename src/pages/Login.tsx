@@ -7,19 +7,53 @@ type LoginProps = {
 }
 
 export function Login({ canPreview, onPreview }: LoginProps) {
-  const { configured, signIn } = useAuth()
+  const { configured, signIn, signUp } = useAuth()
+  const [mode, setMode] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const registering = mode === 'register'
+
+  function switchMode(next: 'login' | 'register') {
+    setMode(next)
+    setError(null)
+    setNotice(null)
+    setPassword('')
+    setConfirmPassword('')
+  }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
     if (!configured) return
-    setSubmitting(true)
     setError(null)
-    const message = await signIn(email, password)
-    setError(message)
+    setNotice(null)
+    if (registering) {
+      if (password.length < 6) {
+        setError('La contraseña tiene que tener al menos 6 caracteres.')
+        return
+      }
+      if (password !== confirmPassword) {
+        setError('Las contraseñas no coinciden.')
+        return
+      }
+    }
+    setSubmitting(true)
+    if (registering) {
+      const result = await signUp(email, password)
+      if (result.needsConfirmation) {
+        setMode('login')
+        setPassword('')
+        setConfirmPassword('')
+        setNotice('Te enviamos un mail para confirmar la cuenta. Cuando lo abras, volvé y entrá.')
+      } else {
+        setError(result.error)
+      }
+    } else {
+      setError(await signIn(email, password))
+    }
     setSubmitting(false)
   }
 
@@ -57,23 +91,50 @@ export function Login({ canPreview, onPreview }: LoginProps) {
             <input
               className="field font-normal"
               type="password"
-              autoComplete="current-password"
+              autoComplete={registering ? 'new-password' : 'current-password'}
               value={password}
               required
+              minLength={registering ? 6 : undefined}
               disabled={!configured || submitting}
               onChange={(event) => setPassword(event.target.value)}
             />
           </label>
+          {registering ? (
+            <label className="flex flex-col gap-1 text-sm font-bold">
+              Repetir contraseña
+              <input
+                className="field font-normal"
+                type="password"
+                autoComplete="new-password"
+                value={confirmPassword}
+                required
+                minLength={6}
+                disabled={!configured || submitting}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+              />
+            </label>
+          ) : null}
+          {notice ? (
+            <p role="status" className="text-sm">
+              {notice}
+            </p>
+          ) : null}
           {error ? (
             <p role="alert" className="text-sm text-dea">
               {error}
             </p>
           ) : null}
           <button className="btn btn-primary w-full" type="submit" disabled={!configured || submitting}>
-            {submitting ? 'Entrando…' : 'Entrar'}
+            {submitting ? (registering ? 'Creando cuenta…' : 'Entrando…') : registering ? 'Crear cuenta' : 'Entrar'}
           </button>
           {configured ? (
-            <p className="text-sm text-muted">Si no tenés usuario, pedile a quien administra el mapa que te invite.</p>
+            <button
+              type="button"
+              className="text-sm font-bold text-ink underline"
+              onClick={() => switchMode(registering ? 'login' : 'register')}
+            >
+              {registering ? '¿Ya tenés cuenta? Entrá' : '¿No tenés cuenta? Registrate'}
+            </button>
           ) : null}
         </form>
 
@@ -95,7 +156,7 @@ function SetupSteps() {
       <ol className="mt-2 list-decimal space-y-2 pl-5">
         <li>Creá un proyecto en Supabase.</li>
         <li>En el SQL Editor, ejecutá el archivo supabase/schema.sql.</li>
-        <li>En Authentication, desactivá el registro público e invitá a cada persona.</li>
+        <li>En Authentication, dejá activado «Allow new users to sign up». Quien se registra entra como miembro.</li>
         <li>Copiá .env.example a .env.local y completá la URL y la anon key.</li>
         <li>Al primer usuario, dale rol admin con el update que está comentado al final del SQL.</li>
       </ol>

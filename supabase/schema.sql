@@ -4,9 +4,9 @@
 -- Las tablas que ya existen no se modifican.
 --
 -- Después:
--- 1. Authentication > Sign In / Providers > Email: desactivá "Allow new users to sign up".
--- 2. Invitá a cada persona desde Authentication > Users > Invite.
--- 3. Al primer usuario, descomentá y ejecutá el update de admin del final.
+-- 1. Authentication > Sign In / Providers > Email: dejá activado "Allow new users to sign up".
+--    Quien se registra entra como miembro.
+-- 2. Al primer usuario, descomentá y ejecutá el update de admin del final.
 
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,

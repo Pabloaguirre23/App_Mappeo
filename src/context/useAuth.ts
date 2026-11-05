@@ -2,6 +2,11 @@ import { createContext, useContext } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import type { Profile } from '../lib/types.ts'
 
+export type SignUpResult = {
+  error: string | null
+  needsConfirmation: boolean
+}
+
 export type AuthState = {
   loading: boolean
   configured: boolean
@@ -10,6 +15,7 @@ export type AuthState = {
   profileLoading: boolean
   profileError: string | null
   signIn: (email: string, password: string) => Promise<string | null>
+  signUp: (email: string, password: string) => Promise<SignUpResult>
   signOut: () => Promise<void>
 }
 
