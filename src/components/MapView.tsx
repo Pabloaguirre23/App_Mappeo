@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import {
+  Circle,
   MapContainer,
   Marker,
   TileLayer,
@@ -7,7 +8,7 @@ import {
   useMap,
   useMapEvents,
 } from 'react-leaflet'
-import { marker, markerClusterGroup, type Map as LeafletMap } from 'leaflet'
+import { divIcon, marker, markerClusterGroup, type Map as LeafletMap } from 'leaflet'
 import 'leaflet.markercluster'
 import type { Bounds } from '../lib/geo.ts'
 import { clusterIcon, draftIcon, pinIcon } from '../lib/pins.ts'
@@ -21,12 +22,19 @@ export type MapFocus = {
   lift?: boolean
 }
 
+export type UserLocation = {
+  lat: number
+  lng: number
+  accuracy: number
+}
+
 type MapViewProps = {
   locations: Location[]
   selectedId: string | null
   placing: boolean
   dark: boolean
   draft: { lat: number; lng: number } | null
+  me: UserLocation | null
   focus: MapFocus | null
   onSelect: (location: Location) => void
   onPick: (lat: number, lng: number) => void
@@ -45,6 +53,7 @@ export function MapView({
   placing,
   dark,
   draft,
+  me,
   focus,
   onSelect,
   onPick,
@@ -89,6 +98,7 @@ export function MapView({
           keyboard={false}
         />
       ) : null}
+      {me ? <UserDot me={me} /> : null}
     </MapContainer>
   )
 }
@@ -169,6 +179,36 @@ function FlyTo({ focus }: { focus: MapFocus | null }) {
     map.flyTo(center, focus.zoom, { duration: 0.9 })
   }, [focus, map])
   return null
+}
+
+const meIcon = divIcon({
+  className: 'me-wrap',
+  html: '<span class="me-pulse"></span><span class="me-dot"></span>',
+  iconSize: [22, 22],
+  iconAnchor: [11, 11],
+})
+
+function UserDot({ me }: { me: UserLocation }) {
+  const radius = Number.isFinite(me.accuracy) && me.accuracy > 0 ? me.accuracy : 0
+  return (
+    <>
+      {radius > 0 ? (
+        <Circle
+          center={[me.lat, me.lng]}
+          radius={radius}
+          interactive={false}
+          pathOptions={{
+            color: '#1a73e8',
+            weight: 1,
+            opacity: 0.4,
+            fillColor: '#1a73e8',
+            fillOpacity: 0.15,
+          }}
+        />
+      ) : null}
+      <Marker position={[me.lat, me.lng]} icon={meIcon} interactive={false} keyboard={false} zIndexOffset={2000} />
+    </>
+  )
 }
 
 function liftedCenter(map: LeafletMap, lat: number, lng: number, zoom: number) {

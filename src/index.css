@@ -180,10 +180,53 @@ button:disabled {
   }
 }
 
-.pin-wrap.leaflet-div-icon {
+.pin-wrap.leaflet-div-icon,
+.me-wrap.leaflet-div-icon {
   background: transparent;
   border: none;
   overflow: visible;
+}
+
+.me-dot {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border: 3px solid #fff;
+  border-radius: 999px;
+  background: #1a73e8;
+  box-shadow: 0 0 0 1px rgba(26, 115, 232, 0.45), 0 1px 3px rgba(28, 36, 48, 0.35);
+}
+
+.me-pulse {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(26, 115, 232, 0.35);
+  animation: me-pulse 2s ease-out infinite;
+}
+
+@keyframes me-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  70%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .me-pulse {
+    animation: none;
+    opacity: 0;
+  }
 }
 
 .pin-marker {

@@ -5,7 +5,7 @@ import { MapMenu } from '../components/MapMenu.tsx'
 import { MyPins } from '../components/MyPins.tsx'
 import { LocationForm } from '../components/LocationForm.tsx'
 import { LocationSheet } from '../components/LocationSheet.tsx'
-import { MapView, type MapFocus } from '../components/MapView.tsx'
+import { MapView, type MapFocus, type UserLocation } from '../components/MapView.tsx'
 import { Panel } from '../components/Panel.tsx'
 import type { Bounds } from '../lib/geo.ts'
 import { lookupPoint, type PointLookup } from '../lib/georef.ts'
@@ -62,6 +62,7 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
   const [actionError, setActionError] = useState<string | null>(null)
   const [gpsMessage, setGpsMessage] = useState<string | null>(null)
   const [locating, setLocating] = useState(false)
+  const [me, setMe] = useState<UserLocation | null>(null)
   const [darkMap, setDarkMap] = useState(() => window.localStorage.getItem('map-dark') === '1')
   const [mineOpen, setMineOpen] = useState(false)
   const [mineRows, setMineRows] = useState<Location[]>([])
@@ -70,13 +71,23 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
 
   const requestRef = useRef(0)
   const mineRequestRef = useRef(0)
+  const watchRef = useRef<number | null>(null)
+  const flyOnNextFix = useRef(false)
+  const meRef = useRef(me)
   const pendingRef = useRef<LocationDraft | null>(null)
   const modeRef = useRef(mode)
   const editingRef = useRef(editing)
   useEffect(() => {
     modeRef.current = mode
     editingRef.current = editing
+    meRef.current = me
   })
+
+  useEffect(() => {
+    return () => {
+      if (watchRef.current != null) navigator.geolocation.clearWatch(watchRef.current)
+    }
+  }, [])
 
   const activeKinds = useMemo(
     () => KIND_LIST.filter((kind) => active.has(kind)),
@@ -272,36 +283,61 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
     })
   }
 
+  function flyToMe(lat: number, lng: number) {
+    setFocus({ lat, lng, zoom: 15, token: Date.now() })
+    if (modeRef.current !== 'browse') {
+      setNearby(null)
+      pendingRef.current = null
+      setDraft({ lat, lng })
+    }
+  }
+
   function locate() {
     if (!navigator.geolocation) {
       setGpsMessage('Este navegador no puede leer la ubicación.')
       return
     }
-    setLocating(true)
     setGpsMessage(null)
-    navigator.geolocation.getCurrentPosition(
+    if (watchRef.current != null) {
+      const known = meRef.current
+      if (known) flyToMe(known.lat, known.lng)
+      else {
+        flyOnNextFix.current = true
+        setLocating(true)
+      }
+      return
+    }
+    flyOnNextFix.current = true
+    setLocating(true)
+    watchRef.current = navigator.geolocation.watchPosition(
       (position) => {
         const lat = position.coords.latitude
         const lng = position.coords.longitude
-        setFocus({ lat, lng, zoom: 15, token: Date.now() })
-        if (modeRef.current !== 'browse') {
-          setNearby(null)
-          pendingRef.current = null
-          setDraft({ lat, lng })
+        setMe({ lat, lng, accuracy: position.coords.accuracy })
+        if (flyOnNextFix.current) {
+          flyOnNextFix.current = false
+          flyToMe(lat, lng)
         }
         setLocating(false)
+        setGpsMessage(null)
       },
       (error) => {
         setLocating(false)
+        if (error.code === error.PERMISSION_DENIED) flyOnNextFix.current = false
+        if (meRef.current) return
         if (error.code === error.PERMISSION_DENIED) {
           setGpsMessage('El navegador no tiene permiso para usar tu ubicación.')
+          if (watchRef.current != null) {
+            navigator.geolocation.clearWatch(watchRef.current)
+            watchRef.current = null
+          }
         } else if (error.code === error.TIMEOUT) {
           setGpsMessage('La ubicación tardó demasiado. Intentá de nuevo al aire libre.')
         } else {
           setGpsMessage('No llegamos a obtener tu ubicación. Intentá de nuevo.')
         }
       },
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 20000 },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 5000 },
     )
   }
 
@@ -400,6 +436,7 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
           placing={mode !== 'browse'}
           dark={darkMap}
           draft={draft}
+          me={me}
           focus={focus}
           onSelect={onSelect}
           onPick={onPick}
@@ -431,9 +468,10 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
           />
           <button
             type="button"
-            className="grid size-11 shrink-0 place-items-center rounded-xl border border-line bg-surface text-ink shadow-sm"
-            aria-label="Usar mi ubicación"
-            title="Usar mi ubicación"
+            className={`grid size-11 shrink-0 place-items-center rounded-xl border border-line bg-surface shadow-sm ${me ? 'text-[#1a73e8]' : 'text-ink'}`}
+            aria-label="Mostrar mi ubicación"
+            title="Mostrar mi ubicación"
+            aria-pressed={me !== null}
             disabled={locating}
             onClick={locate}
           >
