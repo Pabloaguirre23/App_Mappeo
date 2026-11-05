@@ -17,9 +17,10 @@ export function Panel({ title, subtitle, swipeToClose = false, onClose, children
   })
 
   useEffect(() => {
-    const panel = panelRef.current
+    const element = panelRef.current
     const scroller = scrollerRef.current
-    if (!panel || !swipeToClose) return
+    if (!element || !swipeToClose) return
+    const panel = element
 
     let startY = 0
     let startX = 0
