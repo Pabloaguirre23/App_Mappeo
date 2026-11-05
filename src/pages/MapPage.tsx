@@ -178,6 +178,30 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
     setDraft({ lat, lng })
   }, [])
 
+  const searchPins = useCallback(
+    (query: string, signal: AbortSignal) => repo.searchByName(query, signal),
+    [repo],
+  )
+
+  function openSearchedPin(location: Location) {
+    setMode('browse')
+    setDraft(null)
+    setPlace(null)
+    setNearby(null)
+    setFormError(null)
+    setEditing(null)
+    pendingRef.current = null
+    setActionError(null)
+    setActive((current) => {
+      if (current.has(location.kind)) return current
+      const next = new Set(current)
+      next.add(location.kind)
+      return next
+    })
+    setSelected(location)
+    setFocus({ lat: location.lat, lng: location.lng, zoom: 16, token: Date.now() })
+  }
+
   function startCreate() {
     setSelected(null)
     setEditing(null)
@@ -358,9 +382,11 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
             onExit={onExit}
           />
           <CitySearch
+            searchPins={searchPins}
             onSelect={(locality) => {
               setFocus({ lat: locality.lat, lng: locality.lng, zoom: 13, token: Date.now() })
             }}
+            onSelectPin={openSearchedPin}
           />
           <button
             type="button"

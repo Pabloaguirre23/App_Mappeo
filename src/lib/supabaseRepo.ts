@@ -52,6 +52,22 @@ export function createSupabaseRepo(client: SupabaseClient): LocationRepo {
       return { rows, truncated: rows.length >= VIEWPORT_LIMIT }
     },
 
+    async searchByName(query, signal) {
+      const text = query.trim()
+      if (text.length < 2) return []
+      const pattern = `%${text.replace(/[\\%_]/g, (char) => `\\${char}`)}%`
+      const request = client
+        .from('locations')
+        .select(COLUMNS)
+        .ilike('name', pattern)
+        .order('name')
+        .limit(8)
+      const { data, error } = await (signal ? request.abortSignal(signal) : request)
+      if (signal?.aborted) return []
+      if (error) throw new Error(readableError(error, 'No se pudieron buscar los puntos.'))
+      return ((data ?? []) as Row[]).map((row) => mapRow(row))
+    },
+
     async findNearby(input) {
       const pad = 0.001
       const { data, error } = await client

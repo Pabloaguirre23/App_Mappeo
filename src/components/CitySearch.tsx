@@ -1,16 +1,24 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { GeorefError, searchLocalities, type Locality } from '../lib/georef.ts'
+import { searchLocalities, type Locality } from '../lib/georef.ts'
+import { KIND_META, kindBadge } from '../lib/kinds.ts'
+import type { Location } from '../lib/types.ts'
 
 type CitySearchProps = {
+  searchPins: (query: string, signal: AbortSignal) => Promise<Location[]>
   onSelect: (place: Locality) => void
+  onSelectPin: (location: Location) => void
 }
 
-export function CitySearch({ onSelect }: CitySearchProps) {
+type Hit =
+  | { key: string; kind: 'pin'; location: Location }
+  | { key: string; kind: 'place'; place: Locality }
+
+export function CitySearch({ searchPins, onSelect, onSelectPin }: CitySearchProps) {
   const listId = useId()
   const rootRef = useRef<HTMLDivElement>(null)
   const skipSearch = useRef(false)
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<Locality[]>([])
+  const [results, setResults] = useState<Hit[]>([])
   const [open, setOpen] = useState(false)
   const [searching, setSearching] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -34,39 +42,47 @@ export function CitySearch({ onSelect }: CitySearchProps) {
 
     const controller = new AbortController()
     const timer = window.setTimeout(() => {
-      searchLocalities(text, controller.signal)
-        .then((rows) => {
-          setResults(rows)
-          setError(null)
-          setHighlight(0)
-          setOpen(true)
-        })
-        .catch((caught: unknown) => {
+      void Promise.allSettled([searchLocalities(text, controller.signal), searchPins(text, controller.signal)]).then(
+        ([places, pins]) => {
           if (controller.signal.aborted) return
-          if (caught instanceof DOMException && caught.name === 'AbortError') return
-          setResults([])
-          setError(caught instanceof GeorefError ? caught.message : 'No se pudo buscar localidades. Revisá la conexión.')
+          const next: Hit[] = []
+          if (pins.status === 'fulfilled') {
+            for (const location of pins.value) {
+              next.push({ key: `pin-${location.id}`, kind: 'pin', location })
+            }
+          }
+          if (places.status === 'fulfilled') {
+            for (const place of places.value) {
+              next.push({ key: `place-${place.id}`, kind: 'place', place })
+            }
+          }
+          const placeError = places.status === 'rejected' && !isAbort(places.reason)
+          const pinError = pins.status === 'rejected' && !isAbort(pins.reason)
+          setResults(next)
+          setHighlight(0)
+          setError(next.length === 0 && (placeError || pinError) ? 'No se pudo buscar. Revisá la conexión.' : null)
+          setSearching(false)
           setOpen(true)
-        })
-        .finally(() => {
-          if (!controller.signal.aborted) setSearching(false)
-        })
+        },
+      )
     }, 300)
 
     return () => {
       window.clearTimeout(timer)
       controller.abort()
     }
-  }, [query])
+  }, [query, searchPins])
 
-  function choose(place: Locality) {
+  function choose(hit: Hit) {
     setOpen(false)
     setSearching(false)
-    if (query !== place.name) {
+    const name = hit.kind === 'pin' ? hit.location.name : hit.place.name
+    if (query !== name) {
       skipSearch.current = true
-      setQuery(place.name)
+      setQuery(name)
     }
-    onSelect(place)
+    if (hit.kind === 'pin') onSelectPin(hit.location)
+    else onSelect(hit.place)
   }
 
   const showList = open && query.trim().length >= 2
@@ -74,7 +90,7 @@ export function CitySearch({ onSelect }: CitySearchProps) {
   return (
     <div ref={rootRef} className="relative min-w-0 flex-1">
       <label className="sr-only" htmlFor={`${listId}-input`}>
-        Buscar localidad
+        Buscar punto o localidad
       </label>
       <input
         id={`${listId}-input`}
@@ -83,7 +99,7 @@ export function CitySearch({ onSelect }: CitySearchProps) {
         aria-controls={listId}
         aria-autocomplete="list"
         className="field"
-        placeholder="Buscar localidad"
+        placeholder="Buscar punto o localidad"
         value={query}
         autoComplete="off"
         onChange={(event) => {
@@ -126,41 +142,68 @@ export function CitySearch({ onSelect }: CitySearchProps) {
         <div
           id={listId}
           role="listbox"
-          className="absolute top-[calc(100%+6px)] right-0 left-0 z-10 overflow-hidden rounded-2xl border border-line bg-surface shadow-lg"
+          className="absolute top-[calc(100%+6px)] right-0 left-0 z-10 max-h-80 overflow-auto rounded-2xl border border-line bg-surface shadow-lg"
         >
           {error ? (
             <p role="alert" className="px-3 py-3 text-sm">
               {error}
             </p>
           ) : results.length === 0 ? (
-            <p className="px-3 py-3 text-sm text-muted">No hay localidades con ese nombre en la provincia.</p>
+            <p className="px-3 py-3 text-sm text-muted">No hay puntos ni localidades con ese nombre.</p>
           ) : (
-            results.map((place, index) => {
-              const same =
-                place.partido.length > 0 &&
-                place.name.toLocaleLowerCase('es') === place.partido.toLocaleLowerCase('es')
-              return (
-                <button
-                  key={place.id}
-                  type="button"
-                  role="option"
-                  aria-selected={index === highlight}
-                  className={`flex min-h-11 w-full flex-col items-start justify-center px-3 py-2 text-left ${
-                    index === highlight ? 'bg-paper' : 'bg-surface'
-                  }`}
-                  onMouseEnter={() => setHighlight(index)}
-                  onClick={() => choose(place)}
-                >
-                  <span className="font-bold">{place.name}</span>
-                  {place.partido && !same ? (
-                    <span className="text-sm text-muted">Partido de {place.partido}</span>
-                  ) : null}
-                </button>
-              )
-            })
+            results.map((hit, index) => (
+              <button
+                key={hit.key}
+                type="button"
+                role="option"
+                aria-selected={index === highlight}
+                className={`flex min-h-11 w-full items-center gap-3 px-3 py-2 text-left ${
+                  index === highlight ? 'bg-paper' : 'bg-surface'
+                }`}
+                onMouseEnter={() => setHighlight(index)}
+                onClick={() => choose(hit)}
+              >
+                {hit.kind === 'pin' ? <PinMark color={KIND_META[hit.location.kind].color} /> : null}
+                <span className="min-w-0">
+                  <span className="block truncate font-bold">
+                    {hit.kind === 'pin' ? hit.location.name : hit.place.name}
+                  </span>
+                  <HitDetail hit={hit} />
+                </span>
+              </button>
+            ))
           )}
         </div>
       ) : null}
     </div>
   )
+}
+
+function HitDetail({ hit }: { hit: Hit }) {
+  if (hit.kind === 'pin') {
+    const type = kindBadge(hit.location)
+    const repeatsName = type.toLocaleLowerCase('es') === hit.location.name.trim().toLocaleLowerCase('es')
+    const place = [repeatsName ? null : type, hit.location.locality].filter(Boolean).join(' · ')
+    return place ? <span className="block truncate text-sm text-muted">{place}</span> : null
+  }
+  const same =
+    hit.place.partido.length > 0 &&
+    hit.place.name.toLocaleLowerCase('es') === hit.place.partido.toLocaleLowerCase('es')
+  if (!hit.place.partido || same) return null
+  return <span className="block truncate text-sm text-muted">Partido de {hit.place.partido}</span>
+}
+
+function PinMark({ color }: { color: string }) {
+  return (
+    <svg className="shrink-0" width="16" height="20" viewBox="0 0 40 52" aria-hidden="true">
+      <path
+        fill={color}
+        d="M20 50.2C20 50.2 4.2 32.8 4.2 19.6 4.2 10.4 11.3 3 20 3s15.8 7.4 15.8 16.6C35.8 32.8 20 50.2 20 50.2z"
+      />
+    </svg>
+  )
+}
+
+function isAbort(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'AbortError'
 }

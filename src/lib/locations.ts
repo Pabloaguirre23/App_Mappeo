@@ -14,6 +14,7 @@ export type NearbyQuery = {
 
 export interface LocationRepo {
   listInBBox(bounds: Bounds, kinds: Kind[]): Promise<{ rows: Location[]; truncated: boolean }>
+  searchByName(query: string, signal?: AbortSignal): Promise<Location[]>
   findNearby(input: NearbyQuery): Promise<NearbyHit | null>
   insert(input: NewLocation, userId: string): Promise<Location>
   update(id: string, input: NewLocation): Promise<Location>

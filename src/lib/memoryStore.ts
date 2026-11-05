@@ -84,6 +84,13 @@ export function createMemoryRepo(): LocationRepo {
         truncated: matched.length > VIEWPORT_LIMIT,
       }
     },
+    async searchByName(query) {
+      const needle = query.trim().toLocaleLowerCase('es')
+      if (needle.length < 2) return []
+      return rows
+        .filter((row) => row.name.toLocaleLowerCase('es').includes(needle))
+        .slice(0, 8)
+    },
     async findNearby(input) {
       return closestWithin(rows, input)
     },
