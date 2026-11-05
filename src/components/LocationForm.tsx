@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { KindGlyph } from './KindGlyph.tsx'
 import { KIND_LIST, KIND_META } from '../lib/kinds.ts'
 import { formatDistance } from '../lib/geo.ts'
 import type { LocationDraft, NearbyHit } from '../lib/types.ts'
@@ -96,10 +97,11 @@ export function LocationForm({
               onChange={() => update('kind', kind)}
             />
             <span
-              className="size-3 rounded-full"
-              style={{ background: KIND_META[kind].color }}
-              aria-hidden="true"
-            />
+              className="grid size-7 place-items-center rounded-full"
+              style={{ background: KIND_META[kind].lightBadge, color: KIND_META[kind].color }}
+            >
+              <KindGlyph kind={kind} size={14} />
+            </span>
             <span className="text-sm">{KIND_META[kind].label}</span>
           </label>
         ))}

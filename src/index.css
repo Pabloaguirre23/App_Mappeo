@@ -120,10 +120,6 @@ button:disabled {
   filter: invert(1) hue-rotate(180deg) brightness(1.12) contrast(1.05) saturate(0.45);
 }
 
-.map-dark .pin.is-selected {
-  box-shadow: 0 0 0 3px #f6f3ec;
-}
-
 .leaflet-container img,
 .leaflet-container .leaflet-tile {
   max-width: none !important;
@@ -149,35 +145,23 @@ button:disabled {
 .pin-wrap.leaflet-div-icon {
   background: transparent;
   border: none;
+  overflow: visible;
 }
 
-.pin {
-  display: flex;
-  width: 22px;
-  height: 22px;
-  margin: 3px;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid white;
-  border-radius: 999px;
-  color: white;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1;
-  box-shadow: 0 1px 4px rgba(28, 36, 48, 0.4);
+.pin-marker {
+  display: block;
+  overflow: visible;
+  filter: drop-shadow(0 2px 2px rgba(28, 36, 48, 0.35));
 }
 
-.pin.is-selected {
-  width: 26px;
-  height: 26px;
-  margin: 1px;
-  box-shadow: 0 0 0 3px #1c2430;
+.pin-marker.is-selected {
+  transform: translateY(-2px) scale(1.08);
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 0 1.5px #1c2430) drop-shadow(0 3px 4px rgba(28, 36, 48, 0.4));
 }
 
-.pin-draft {
-  background: white;
-  border: 2px dashed #1c2430;
-  box-shadow: 0 0 0 4px rgba(194, 65, 45, 0.35);
+.map-dark .pin-marker.is-selected {
+  filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 3px 4px rgba(0, 0, 0, 0.45));
 }
 
 .cluster-pin {

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { KindGlyph } from './KindGlyph.tsx'
 import { KIND_META, kindBadge } from '../lib/kinds.ts'
 import type { Location } from '../lib/types.ts'
 
@@ -36,12 +37,13 @@ export function LocationSheet({
 
   return (
     <div className="flex flex-col gap-3 pb-2">
-      <p className="inline-flex w-fit items-center gap-2 rounded-full bg-white px-3 py-1 text-sm font-bold">
+      <p className="inline-flex w-fit items-center gap-2 rounded-full border border-[#e6e8ee] bg-white py-1 pr-3 pl-1 text-sm font-bold">
         <span
-          className="size-2.5 rounded-full"
-          style={{ background: KIND_META[location.kind].color }}
-          aria-hidden="true"
-        />
+          className="grid size-7 place-items-center rounded-full"
+          style={{ background: KIND_META[location.kind].lightBadge, color: KIND_META[location.kind].color }}
+        >
+          <KindGlyph kind={location.kind} size={14} />
+        </span>
         {badge}
       </p>
       {location.address ? <p>{location.address}</p> : null}

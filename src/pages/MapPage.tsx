@@ -374,7 +374,7 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
           </button>
         </div>
         <div className={`pointer-events-auto ${showForm || selected ? 'md:pr-[392px]' : ''}`}>
-          <Filters active={active} onToggle={toggleKind} />
+          <Filters active={active} dark={darkMap} onToggle={toggleKind} />
         </div>
         {preview ? (
           <p className="pointer-events-none w-fit max-w-full rounded-full bg-white/95 px-3 py-1 text-sm shadow">
