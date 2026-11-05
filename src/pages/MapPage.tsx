@@ -346,11 +346,6 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
 
       <div className="pointer-events-none absolute inset-x-0 top-0 z-[450] flex flex-col gap-2 p-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:pr-[24px]">
         <div className={`pointer-events-auto relative z-10 flex items-center gap-2 ${showForm || selected ? 'md:pr-[392px]' : ''}`}>
-          <CitySearch
-            onSelect={(locality) => {
-              setFocus({ lat: locality.lat, lng: locality.lng, zoom: 13, token: Date.now() })
-            }}
-          />
           <MapMenu
             dark={darkMap}
             onToggleDark={() => {
@@ -361,6 +356,11 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
               })
             }}
             onExit={onExit}
+          />
+          <CitySearch
+            onSelect={(locality) => {
+              setFocus({ lat: locality.lat, lng: locality.lng, zoom: 13, token: Date.now() })
+            }}
           />
           <button
             type="button"

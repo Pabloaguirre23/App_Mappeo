@@ -45,7 +45,7 @@ export function MapMenu({ dark, onToggleDark, onExit }: MapMenuProps) {
       {open ? (
         <div
           role="menu"
-          className="absolute right-0 z-20 mt-2 w-56 rounded-2xl border border-line bg-surface p-2 shadow-lg"
+          className="absolute left-0 z-20 mt-2 w-56 rounded-2xl border border-line bg-surface p-2 shadow-lg"
         >
           <button
             type="button"
