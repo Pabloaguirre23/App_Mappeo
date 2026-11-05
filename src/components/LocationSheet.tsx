@@ -8,6 +8,7 @@ type LocationSheetProps = {
   canModify: boolean
   own: boolean
   deleting: boolean
+  dark: boolean
   error: string | null
   onClose: () => void
   onEdit: () => void
@@ -19,6 +20,7 @@ export function LocationSheet({
   canModify,
   own,
   deleting,
+  dark,
   error,
   onClose,
   onEdit,
@@ -37,10 +39,14 @@ export function LocationSheet({
 
   return (
     <div className="flex flex-col gap-3 pb-2">
-      <p className="inline-flex w-fit items-center gap-2 rounded-full border border-[#e6e8ee] bg-white py-1 pr-3 pl-1 text-sm font-bold">
+      <p className="inline-flex w-fit items-center gap-2 rounded-full border border-line bg-surface py-1 pr-3 pl-1 text-sm font-bold">
         <span
           className="grid size-7 place-items-center rounded-full"
-          style={{ background: KIND_META[location.kind].lightBadge, color: KIND_META[location.kind].color }}
+          style={{
+            background: dark ? KIND_META[location.kind].darkBadge : KIND_META[location.kind].lightBadge,
+            color: KIND_META[location.kind].color,
+            boxShadow: dark ? `inset 0 0 0 1.5px ${KIND_META[location.kind].color}` : undefined,
+          }}
         >
           <KindGlyph kind={location.kind} size={14} />
         </span>

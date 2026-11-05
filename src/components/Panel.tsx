@@ -163,7 +163,7 @@ export function Panel({ title, subtitle, swipeToClose = false, onClose, children
           type="button"
           onClick={onClose}
           aria-label="Cerrar"
-          className="grid size-11 shrink-0 place-items-center rounded-xl hover:bg-black/5"
+          className="grid size-11 shrink-0 place-items-center rounded-xl hover:bg-ink/5"
         >
           <span aria-hidden="true" className="text-xl leading-none">
             ×

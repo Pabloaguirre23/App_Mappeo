@@ -26,7 +26,7 @@ export function Filters({ active, dark, onToggle }: FiltersProps) {
             className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border py-1 pr-3.5 pl-1 text-sm font-bold whitespace-nowrap shadow-sm ${
               dark
                 ? 'border-white/35 bg-[#1a2332] text-white'
-                : 'border-[#e6e8ee] bg-white text-ink'
+                : 'border-line bg-surface text-ink'
             } ${pressed ? '' : 'opacity-45'}`}
           >
             <span

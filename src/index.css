@@ -4,6 +4,7 @@
   --font-sans: "Atkinson Hyperlegible", ui-sans-serif, system-ui, sans-serif;
   --color-ink: #1c2430;
   --color-paper: #f6f3ec;
+  --color-surface: #ffffff;
   --color-line: #e4dccf;
   --color-muted: #5c6672;
   --color-dea: #c2412d;
@@ -75,7 +76,7 @@ button:disabled {
 
   .btn-ghost {
     border: 1px solid var(--color-line);
-    background: white;
+    background: var(--color-surface);
     color: var(--color-ink);
   }
 
@@ -92,7 +93,7 @@ button:disabled {
     min-height: 2.75rem;
     border-radius: 0.75rem;
     border: 1px solid var(--color-line);
-    background: white;
+    background: var(--color-surface);
     padding-inline: 0.75rem;
     font-size: 1rem;
     color: var(--color-ink);
@@ -102,6 +103,43 @@ button:disabled {
   .field:focus-visible {
     border-color: var(--color-ink);
   }
+}
+
+.map-ui-dark {
+  color-scheme: dark;
+  --color-ink: #f3f0e8;
+  --color-paper: #1a2332;
+  --color-surface: #243044;
+  --color-line: #3d4a5c;
+  --color-muted: #a8b3c2;
+  color: var(--color-ink);
+}
+
+.map-ui-dark .btn-ghost:hover:not(:disabled) {
+  background: #2e3b50;
+}
+
+.map-ui-dark .btn-primary:hover:not(:disabled) {
+  background: #e4dfd4;
+}
+
+.map-ui-dark .leaflet-control-attribution {
+  background: rgba(26, 35, 50, 0.88);
+  color: #a8b3c2;
+}
+
+.map-ui-dark .leaflet-control-attribution a {
+  color: #f3f0e8;
+}
+
+.map-ui-dark .leaflet-bar a {
+  background: #1a2332;
+  color: #f3f0e8;
+  border-bottom-color: #3d4a5c;
+}
+
+.map-ui-dark .leaflet-bar a:hover {
+  background: #243044;
 }
 
 .leaflet-container {

@@ -328,7 +328,7 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
   }
 
   return (
-    <div className="relative h-dvh w-full overflow-hidden">
+    <div className={`relative h-dvh w-full overflow-hidden ${darkMap ? 'map-ui-dark' : ''}`}>
       <div className="absolute inset-0">
         <MapView
           locations={locations}
@@ -364,7 +364,7 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
           />
           <button
             type="button"
-            className="grid size-11 shrink-0 place-items-center rounded-xl border border-line bg-white shadow-sm"
+            className="grid size-11 shrink-0 place-items-center rounded-xl border border-line bg-surface text-ink shadow-sm"
             aria-label="Usar mi ubicación"
             title="Usar mi ubicación"
             disabled={locating}
@@ -377,7 +377,7 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
           <Filters active={active} dark={darkMap} onToggle={toggleKind} />
         </div>
         {preview ? (
-          <p className="pointer-events-none w-fit max-w-full rounded-full bg-white/95 px-3 py-1 text-sm shadow">
+          <p className="pointer-events-none w-fit max-w-full rounded-full bg-surface/95 px-3 py-1 text-sm shadow">
             Vista previa en este navegador. Lo que cargues se pierde al recargar.
           </p>
         ) : null}
@@ -390,7 +390,7 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
           </div>
         ) : null}
         {gpsMessage ? (
-          <div role="alert" className="pointer-events-auto flex w-fit max-w-full items-start gap-2 rounded-2xl bg-white px-3 py-2 text-sm shadow">
+          <div role="alert" className="pointer-events-auto flex w-fit max-w-full items-start gap-2 rounded-2xl bg-surface px-3 py-2 text-sm shadow">
             <p>{gpsMessage}</p>
             <button type="button" aria-label="Cerrar aviso" className="font-bold" onClick={() => setGpsMessage(null)}>
               ×
@@ -400,7 +400,7 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
         {status ? (
           <p
             role={status.tone === 'error' ? 'alert' : 'status'}
-            className="pointer-events-none w-fit max-w-full rounded-full bg-white/95 px-3 py-1 text-sm shadow"
+            className="pointer-events-none w-fit max-w-full rounded-full bg-surface/95 px-3 py-1 text-sm shadow"
           >
             {status.text}
           </p>
@@ -440,6 +440,7 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
             }}
             onUseMyLocation={locate}
             onCancel={cancelForm}
+            dark={darkMap}
           />
         </Panel>
       ) : null}
@@ -451,6 +452,7 @@ export function MapPage({ profile, preview, onExit }: MapPageProps) {
             canModify={profile.role === 'admin' || selected.createdBy === profile.id}
             own={selected.createdBy === profile.id}
             deleting={deleting}
+            dark={darkMap}
             error={actionError}
             onClose={() => setSelected(null)}
             onEdit={startEdit}

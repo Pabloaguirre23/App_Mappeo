@@ -17,6 +17,7 @@ type LocationFormProps = {
   onDirty: () => void
   onUseMyLocation: () => void
   onCancel: () => void
+  dark: boolean
 }
 
 type FieldErrors = {
@@ -37,6 +38,7 @@ export function LocationForm({
   onDirty,
   onUseMyLocation,
   onCancel,
+  dark,
 }: LocationFormProps) {
   const [values, setValues] = useState(initial)
   const [errors, setErrors] = useState<FieldErrors>({})
@@ -86,7 +88,7 @@ export function LocationForm({
           <label
             key={kind}
             className={`flex min-h-11 items-center gap-3 rounded-xl border px-3 ${
-              values.kind === kind ? 'border-ink bg-white' : 'border-line bg-white/70'
+              values.kind === kind ? 'border-ink bg-surface' : 'border-line bg-surface/70'
             }`}
           >
             <input
@@ -98,7 +100,11 @@ export function LocationForm({
             />
             <span
               className="grid size-7 place-items-center rounded-full"
-              style={{ background: KIND_META[kind].lightBadge, color: KIND_META[kind].color }}
+              style={{
+                background: dark ? KIND_META[kind].darkBadge : KIND_META[kind].lightBadge,
+                color: KIND_META[kind].color,
+                boxShadow: dark ? `inset 0 0 0 1.5px ${KIND_META[kind].color}` : undefined,
+              }}
             >
               <KindGlyph kind={kind} size={14} />
             </span>
@@ -158,7 +164,7 @@ export function LocationForm({
       </button>
 
       {nearby ? (
-        <p role="status" className="rounded-xl bg-white px-3 py-2 text-sm">
+        <p role="status" className="rounded-xl bg-surface px-3 py-2 text-sm">
           A {formatDistance(nearby.meters)} ya hay un punto del mismo tipo: {nearby.name}. Podés
           guardarlo igual.
         </p>

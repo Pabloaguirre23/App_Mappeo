@@ -32,7 +32,7 @@ export function MapMenu({ dark, onToggleDark, onExit }: MapMenuProps) {
     <div ref={rootRef} className="relative shrink-0">
       <button
         type="button"
-        className="grid size-11 place-items-center rounded-xl border border-line bg-white shadow-sm"
+        className="grid size-11 place-items-center rounded-xl border border-line bg-surface text-ink shadow-sm"
         aria-label="Menú"
         aria-expanded={open}
         aria-haspopup="menu"
@@ -45,7 +45,7 @@ export function MapMenu({ dark, onToggleDark, onExit }: MapMenuProps) {
       {open ? (
         <div
           role="menu"
-          className="absolute right-0 z-20 mt-2 w-56 rounded-2xl border border-line bg-white p-2 shadow-lg"
+          className="absolute right-0 z-20 mt-2 w-56 rounded-2xl border border-line bg-surface p-2 shadow-lg"
         >
           <button
             type="button"
@@ -60,7 +60,7 @@ export function MapMenu({ dark, onToggleDark, onExit }: MapMenuProps) {
               aria-hidden="true"
             >
               <span
-                className={`absolute top-0.5 size-5 rounded-full bg-white ${dark ? 'left-5' : 'left-0.5'}`}
+                className={`absolute top-0.5 size-5 rounded-full ${dark ? 'left-5 bg-paper' : 'left-0.5 bg-surface'}`}
               />
             </span>
           </button>

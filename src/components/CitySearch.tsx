@@ -126,7 +126,7 @@ export function CitySearch({ onSelect }: CitySearchProps) {
         <div
           id={listId}
           role="listbox"
-          className="absolute top-[calc(100%+6px)] right-0 left-0 z-10 overflow-hidden rounded-2xl border border-line bg-white shadow-lg"
+          className="absolute top-[calc(100%+6px)] right-0 left-0 z-10 overflow-hidden rounded-2xl border border-line bg-surface shadow-lg"
         >
           {error ? (
             <p role="alert" className="px-3 py-3 text-sm">
@@ -146,7 +146,7 @@ export function CitySearch({ onSelect }: CitySearchProps) {
                   role="option"
                   aria-selected={index === highlight}
                   className={`flex min-h-11 w-full flex-col items-start justify-center px-3 py-2 text-left ${
-                    index === highlight ? 'bg-paper' : 'bg-white'
+                    index === highlight ? 'bg-paper' : 'bg-surface'
                   }`}
                   onMouseEnter={() => setHighlight(index)}
                   onClick={() => choose(place)}
